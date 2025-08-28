@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calm Navigator – Simple Help for Everyday Services</title>
+  <meta name="description" content="An accessible, calming web app to help people navigate services like rides, food, groceries, and more. Includes text guidance and text‑to‑speech." />
+  <style>
+    :root {
+      --bg: #f7fafc; /* light slate */
+      --card: #ffffff;
+      --text: #0f172a; /* slate-900 */
+      --muted: #334155; /* slate-700 */
+      --brand: #2563eb; /* blue-600 */
+      --ok: #16a34a; /* green-600 */
+      --warn: #b45309; /* amber-700 */
+      --focus: #fdba74; /* orange-300 */
+      --border: #e5e7eb;
+      --shadow: 0 10px 25px rgba(0,0,0,.06);
+      --radius: 1.25rem;
+      --scale: 1; /* user controlled */
+    }
+
+    [data-contrast="high"] {
+      --bg: #0b0f14;
+      --card: #0b0f14;
+      --text: #ffffff;
+      --muted: #e5e7eb;
+      --brand: #22d3ee;
+      --ok: #86efac;
+      --warn: #fbbf24;
+      --border: #334155;
+    }
+
+    [data-motion="reduced"] * {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      letter-spacing: .1px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: clamp(12px, 2.5vw, 24px);
+      transform: scale(var(--scale));
+      transform-origin: top center;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), #60a5fa);
+      box-shadow: var(--shadow);
+    }
+
+    h1 { font-size: clamp(20px, 3.2vw, 34px); margin: 0; }
+    .subtitle { color: var(--muted); font-size: clamp(14px, 2.2vw, 16px); margin-top: 2px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 980px) {
+      .grid { grid-template-columns: 2fr 1fr; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .services { padding: 18px; }
+
+    .service-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .service {
+      background: linear-gradient(0deg, rgba(2,6,23,.02), rgba(2,6,23,.02)), var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 150px;
+    }
+
+    .service h3 { margin: 0; font-size: 18px; }
+    .service p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+
+    .btn {
+      appearance: none;
+      border: 2px solid transparent;
+      background: var(--brand);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: 0 6px 12px rgba(37,99,235,.15);
+    }
+    .btn:focus { outline: none; box-shadow: 0 0 0 3px var(--focus); }
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn.secondary { background: transparent; color: var(--text); border-color: var(--border); box-shadow: none; }
+
+    .panel { padding: 18px; display: grid; gap: 14px; }
+
+    .panel h2 { margin: 0 0 6px 0; font-size: 20px; }
+
+    .controls { display: grid; gap: 10px; }
+
+    .control {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 12px; border: 1px dashed var(--border); border-radius: 14px;
+    }
+
+    label { font-weight: 600; }
+    input[type="range"] { width: 140px; }
+    select, input[type="text"], input[type="url"] {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text);
+    }
+
+    .steps { border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .step { padding: 12px; border-radius: 12px; }
+    .step[aria-current="step"] { background: rgba(37,99,235,.08); border: 1px solid rgba(37,99,235,.2); }
+
+    .tts-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .tiny { font-size: 12px; color: var(--muted); }
+
+    .helpbar {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(0deg, rgba(2,6,23,.02), rgba(2,6,23,.02));
+    }
+
+    .chip { font-size: 12px; border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; }
+
+    .sr-only { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
+
+    dialog {
+      border: none; border-radius: 18px; box-shadow: var(--shadow); width: min(680px, 92vw);
+    }
+
+    dialog::backdrop { background: rgba(0, 0, 0, .4); }
+
+    .breath-box {
+      width: 180px; height: 180px; margin: 0 auto; border-radius: 999px; border: 6px solid var(--brand);
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    @keyframes breathe { 0%, 100% { transform: scale(.85); } 50% { transform: scale(1); } }
+
+    /* Keyboard focus helpers */
+    a, button, input, select { outline-offset: 3px; }
+  </style>
+</head>
+<body data-contrast="normal" data-motion="normal">
+  <a class="sr-only" href="#main">Skip to content</a>
+  <div class="container" role="application" aria-label="Calm Navigator app">
+    <header>
+      <div class="title" aria-live="polite">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 id="appTitle">Calm Navigator</h1>
+          <div class="subtitle" id="appTag">One clear step at a time. Text + voice guidance.</div>
+        </div>
+      </div>
+      <div class="helpbar" role="region" aria-label="Quick help">
+        <button class="btn secondary" id="btnBreathe" aria-haspopup="dialog">I'm overwhelmed</button>
+        <span class="chip" id="statusText" aria-live="polite">Ready</span>
+      </div>
+    </header>
+
+    <main id="main" class="grid">
+      <!-- Left: Services -->
+      <section class="card services" aria-labelledby="servicesTitle">
+        <h2 id="servicesTitle">Choose a service</h2>
+        <p class="tiny">Tip: Use <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> to move, <kbd>Enter</kbd> to activate. All buttons have spoken guidance.</p>
+
+        <div class="service-list" id="serviceList" role="list">
+          <!-- Services are inserted by JS so users can customize -->
+        </div>
+
+        <div class="control" style="margin-top:14px;">
+          <label for="customName">Add your own service</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="customName" type="text" placeholder="Name (e.g., Local Taxi)" aria-label="Custom service name" />
+            <input id="customUrl" type="url" placeholder="https://example.com" aria-label="Custom service URL" />
+            <button class="btn" id="addService">Add</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Guidance & TTS -->
+      <aside class="card panel" aria-labelledby="guideTitle">
+        <h2 id="guideTitle">Guided steps</h2>
+        <div class="steps" id="steps" role="list">
+          <div class="step" role="listitem" aria-current="step" id="step1">1) Pick a service card.</div>
+          <div class="step" role="listitem" id="step2">2) Press “Open” to go there in a new tab.</div>
+          <div class="step" role="listitem" id="step3">3) Follow the on‑screen instructions. You can come back here any time.</div>
+        </div>
+
+        <div class="controls" aria-label="Voice and accessibility controls">
+          <div class="control">
+            <label for="voiceSelect">Voice</label>
+            <select id="voiceSelect" aria-label="Voice selection"></select>
+          </div>
+          <div class="control">
+            <label for="rate">Reading speed</label>
+            <input id="rate" type="range" min="0.6" max="1.6" step="0.1" value="1" />
+          </div>
+          <div class="tts-row">
+            <button class="btn" id="speakSteps">Read these steps</button>
+            <button class="btn secondary" id="pauseSpeech">Pause</button>
+            <button class="btn secondary" id="resumeSpeech">Resume</button>
+            <button class="btn secondary" id="stopSpeech">Stop</button>
+          </div>
+
+          <div class="control">
+            <label for="zoom">Text size</label>
+            <input id="zoom" type="range" min="1" max="1.5" step="0.05" value="1" />
+          </div>
+
+          <div class="control">
+            <label>High contrast</label>
+            <button class="btn secondary" id="toggleContrast" aria-pressed="false">Off</button>
+          </div>
+
+          <div class="control">
+            <label>Reduce motion</label>
+            <button class="btn secondary" id="toggleMotion" aria-pressed="false">Off</button>
+          </div>
+
+          <div class="control">
+            <label>Simple language</label>
+            <button class="btn secondary" id="toggleSimple" aria-pressed="false">Off</button>
+          </div>
+
+          <div class="tiny" role="note">
+            Privacy note: This page does not collect personal data. External services you open have their own privacy rules.
+          </div>
+        </div>
+
+        <div class="control" aria-label="Emergency resources">
+          <div>
+            <strong>Need urgent help?</strong>
+            <div class="tiny">If you are in immediate danger, call your local emergency number.</div>
+          </div>
+          <div class="btn-row">
+            <a class="btn secondary" href="tel:112">Call 112</a>
+            <a class="btn secondary" href="tel:911">Call 911</a>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Calming modal -->
+  <dialog id="calmDialog" aria-labelledby="calmTitle" aria-describedby="calmDesc">
+    <form method="dialog" style="padding: 20px 20px 16px; display:grid; gap: 14px;">
+      <h2 id="calmTitle" style="margin:0;">Let’s take a calming breath</h2>
+      <p id="calmDesc" style="margin:0; color:var(--muted);">Follow the circle. Inhale as it grows, exhale as it shrinks. Try 3 cycles.</p>
+      <div class="breath-box" aria-hidden="true"></div>
+      <div class="tts-row">
+        <button class="btn" id="coachBreath" type="button">Coach me</button>
+        <button class="btn secondary">I'm ready</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="serviceTemplate">
+    <div class="service" role="listitem">
+      <h3></h3>
+      <p class="desc"></p>
+      <div class="btn-row"></div>
+    </div>
+  </template>
+
+  <script>
+    /* ==========================================================
+       Data: default services (editable + saved to localStorage)
+    ========================================================== */
+    const DEFAULT_SERVICES = [
+      {
+        name: "Uber ride",
+        description: "Get a car to pick you up.",
+        actions: [
+          { label: "Open Uber", url: "https://m.uber.com/" },
+          { label: "Safety Center", url: "https://help.uber.com/riders/article/safety-at-uber?nodeId=2e2b34b9-bc51-44bb-8b8f-9d4efbe2a0db" }
+        ]
+      },
+      {
+        name: "Food delivery",
+        description: "Order meals to your door.",
+        actions: [
+          { label: "Uber Eats", url: "https://www.ubereats.com/" },
+          { label: "DoorDash", url: "https://www.doordash.com/" },
+          { label: "Grubhub", url: "https://www.grubhub.com/" }
+        ]
+      },
+      {
+        name: "Groceries",
+        description: "Get groceries delivered.",
+        actions: [
+          { label: "Instacart", url: "https://www.instacart.com/" },
+          { label: "Amazon Fresh", url: "https://www.amazon.com/fmc/m/20195281011" }
+        ]
+      },
+      {
+        name: "Pharmacy",
+        description: "Refill and delivery options.",
+        actions: [
+          { label: "CVS", url: "https://www.cvs.com/" },
+          { label: "Walgreens", url: "https://www.walgreens.com/" }
+        ]
+      },
+      {
+        name: "Taxi / Local options",
+        description: "Look up local taxi numbers.",
+        actions: [
+          { label: "Search taxis near me", url: "https://www.google.com/search?q=taxi+near+me" },
+          { label: "Public transit maps", url: "https://www.google.com/maps" }
+        ]
+      }
+    ];
+
+    const el = {
+      list: document.getElementById('serviceList'),
+      tpl: document.getElementById('serviceTemplate'),
+      status: document.getElementById('statusText'),
+      steps: document.getElementById('steps'),
+      speakSteps: document.getElementById('speakSteps'),
+      pauseSpeech: document.getElementById('pauseSpeech'),
+      resumeSpeech: document.getElementById('resumeSpeech'),
+      stopSpeech: document.getElementById('stopSpeech'),
+      rate: document.getElementById('rate'),
+      voiceSelect: document.getElementById('voiceSelect'),
+      zoom: document.getElementById('zoom'),
+      toggleContrast: document.getElementById('toggleContrast'),
+      toggleMotion: document.getElementById('toggleMotion'),
+      toggleSimple: document.getElementById('toggleSimple'),
+      btnBreathe: document.getElementById('btnBreathe'),
+      calmDialog: document.getElementById('calmDialog'),
+      coachBreath: document.getElementById('coachBreath'),
+      customName: document.getElementById('customName'),
+      customUrl: document.getElementById('customUrl'),
+      addService: document.getElementById('addService'),
+    };
+
+    /* ==========================================================
+       Accessibility helpers & state
+    ========================================================== */
+    const state = {
+      services: JSON.parse(localStorage.getItem('calm_services') || 'null') || DEFAULT_SERVICES,
+      contrast: localStorage.getItem('calm_contrast') || 'normal',
+      motion: localStorage.getItem('calm_motion') || 'normal',
+      scale: parseFloat(localStorage.getItem('calm_scale') || '1'),
+      simple: localStorage.getItem('calm_simple') === 'true',
+      voiceURI: localStorage.getItem('calm_voiceURI') || null,
+      rate: parseFloat(localStorage.getItem('calm_rate') || '1'),
+    };
+
+    document.body.dataset.contrast = state.contrast;
+    document.body.dataset.motion = state.motion;
+    document.documentElement.style.setProperty('--scale', state.scale);
+
+    /* ==========================================================
+       Render services
+    ========================================================== */
+    function renderServices() {
+      el.list.innerHTML = '';
+      state.services.forEach((svc, idx) => {
+        const node = el.tpl.content.firstElementChild.cloneNode(true);
+        node.querySelector('h3').textContent = svc.name;
+        node.querySelector('.desc').textContent = svc.description;
+        const row = node.querySelector('.btn-row');
+        svc.actions.forEach(a => {
+          const b = document.createElement('a');
+          b.className = 'btn';
+          b.textContent = a.label;
+          b.href = a.url;
+          b.target = '_blank'; b.rel = 'noopener noreferrer';
+          b.addEventListener('click', () => guide(`Opening ${svc.name}: ${a.label}. A new tab will appear.`));
+          row.appendChild(b);
+        });
+        // Manage button
+        const manage = document.createElement('button');
+        manage.className = 'btn secondary';
+        manage.textContent = 'Remove';
+        manage.addEventListener('click', () => removeService(idx));
+        row.appendChild(manage);
+        el.list.appendChild(node);
+      });
+      localStorage.setItem('calm_services', JSON.stringify(state.services));
+    }
+
+    function removeService(idx) {
+      const name = state.services[idx]?.name || 'service';
+      state.services.splice(idx, 1);
+      renderServices();
+      guide(`${name} removed.`);
+    }
+
+    function addService() {
+      const name = el.customName.value.trim();
+      const url = el.customUrl.value.trim();
+      if (!name || !url) { guide('Please enter a name and a valid link.'); return; }
+      state.services.push({ name, description: 'Custom link you added.', actions: [{ label: 'Open', url }] });
+      el.customName.value = ''; el.customUrl.value='';
+      renderServices();
+      guide(`${name} added.`);
+    }
+
+    el.addService.addEventListener('click', addService);
+
+    /* ==========================================================
+       Text to Speech (Web Speech API)
+    ========================================================== */
+    const synth = window.speechSynthesis;
+    let voices = [];
+
+    function populateVoices() {
+      voices = synth.getVoices();
+      el.voiceSelect.innerHTML = '';
+      const def = document.createElement('option');
+      def.value = ''; def.textContent = 'System default';
+      el.voiceSelect.appendChild(def);
+      voices.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.voiceURI;
+        opt.textContent = `${v.name} (${v.lang})${v.default ? ' — default' : ''}`;
+        if (v.voiceURI === state.voiceURI) opt.selected = true;
+        el.voiceSelect.appendChild(opt);
+      });
+    }
+
+    populateVoices();
+    if (typeof speechSynthesis !== 'undefined') {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) { el.status.textContent = 'Speech not supported in this browser.'; return; }
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = state.rate;
+      if (state.voiceURI) {
+        const v = voices.find(v => v.voiceURI === state.voiceURI);
+        if (v) utter.voice = v;
+      }
+      utter.onstart = () => el.status.textContent = 'Speaking…';
+      utter.onend = () => el.status.textContent = 'Ready';
+      synth.speak(utter);
+    }
+
+    function guide(text) {
+      el.status.textContent = text;
+      // politely speak brief guidance
+      speak(text);
+    }
+
+    el.speakSteps.addEventListener('click', () => {
+      const steps = Array.from(el.steps.querySelectorAll('.step')).map(s => s.textContent.trim()).join('\n');
+      speak(steps);
+    });
+    el.pauseSpeech.addEventListener('click', () => synth.pause());
+    el.resumeSpeech.addEventListener('click', () => synth.resume());
+    el.stopSpeech.addEventListener('click', () => synth.cancel());
+    el.rate.addEventListener('input', (e) => { state.rate = parseFloat(e.target.value); localStorage.setItem('calm_rate', state.rate); });
+    el.voiceSelect.addEventListener('change', (e) => { state.voiceURI = e.target.value || null; localStorage.setItem('calm_voiceURI', state.voiceURI || ''); guide('Voice updated.'); });
+
+    /* ==========================================================
+       UI toggles
+    ========================================================== */
+    el.zoom.value = state.scale;
+    el.zoom.addEventListener('input', (e) => {
+      state.scale = parseFloat(e.target.value);
+      document.documentElement.style.setProperty('--scale', state.scale);
+      localStorage.setItem('calm_scale', String(state.scale));
+    });
+
+    const toggleBtn = (btn, on) => { btn.setAttribute('aria-pressed', String(on)); btn.textContent = on ? 'On' : 'Off'; };
+
+    toggleBtn(el.toggleContrast, state.contrast === 'high');
+    toggleBtn(el.toggleMotion, state.motion === 'reduced');
+    toggleBtn(el.toggleSimple, state.simple);
+
+    el.toggleContrast.addEventListener('click', () => {
+      state.contrast = state.contrast === 'high' ? 'normal' : 'high';
+      document.body.dataset.contrast = state.contrast;
+      localStorage.setItem('calm_contrast', state.contrast);
+      toggleBtn(el.toggleContrast, state.contrast === 'high');
+      guide(`High contrast ${state.contrast === 'high' ? 'enabled' : 'disabled'}.`);
+    });
+
+    el.toggleMotion.addEventListener('click', () => {
+      state.motion = state.motion === 'reduced' ? 'normal' : 'reduced';
+      document.body.dataset.motion = state.motion;
+      localStorage.setItem('calm_motion', state.motion);
+      toggleBtn(el.toggleMotion, state.motion === 'reduced');
+      guide(`Motion ${state.motion === 'reduced' ? 'reduced' : 'normal'}.`);
+    });
+
+    const simpleTexts = {
+      title: ['Calm Navigator', 'Easy Helper'],
+      tag: ['One clear step at a time. Text + voice guidance.', 'We say it simply and speak it.'],
+      steps: [
+        ['1) Pick a service card.', '1) Choose a card.'],
+        ['2) Press “Open” to go there in a new tab.', '2) Press “Open” to go there.'],
+        ['3) Follow the on‑screen instructions. You can come back here any time.', '3) Follow the website. Come back here anytime.']
+      ]
+    };
+
+    function applySimpleLanguage(on) {
+      document.getElementById('appTitle').textContent = on ? simpleTexts.title[1] : simpleTexts.title[0];
+      document.getElementById('appTag').textContent = on ? simpleTexts.tag[1] : simpleTexts.tag[0];
+      const s1 = document.getElementById('step1');
+      const s2 = document.getElementById('step2');
+      const s3 = document.getElementById('step3');
+      s1.textContent = on ? simpleTexts.steps[0][1] : simpleTexts.steps[0][0];
+      s2.textContent = on ? simpleTexts.steps[1][1] : simpleTexts.steps[1][0];
+      s3.textContent = on ? simpleTexts.steps[2][1] : simpleTexts.steps[2][0];
+    }
+
+    applySimpleLanguage(state.simple);
+    el.toggleSimple.addEventListener('click', () => {
+      state.simple = !state.simple;
+      localStorage.setItem('calm_simple', String(state.simple));
+      toggleBtn(el.toggleSimple, state.simple);
+      applySimpleLanguage(state.simple);
+      guide(`Simple language ${state.simple ? 'on' : 'off'}.`);
+    });
+
+    /* ==========================================================
+       Calming dialog
+    ========================================================== */
+    el.btnBreathe.addEventListener('click', () => {
+      el.calmDialog.showModal();
+    });
+
+    el.coachBreath.addEventListener('click', () => {
+      speak('Breathe in… two… three… four. Hold… two. Breathe out… two… three… four.');
+    });
+
+    /* ==========================================================
+       Init
+    ========================================================== */
+    renderServices();
+
+    // Keyboard helper: press '?' for quick tour
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '?') {
+        speak('Welcome. Use Tab to move. Press Open on a card to go to that service. The panel on the right can read the steps aloud.');
+      }
+    });
+
+  </script>
+</body>
+</html>
